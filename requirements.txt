@@ -1,6 +1,8 @@
 streamlit
 pandas
-selenium
-beautifulsoup4
 requests
+beautifulsoup4
+selenium
+chromedriver-autoinstaller
+openpyxl
 xlsxwriter
