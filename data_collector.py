@@ -15,7 +15,9 @@ def create_driver():
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("--ignore-certificate-errors")
 
-    service = Service(r"C:\\Users\\181020\\Desktop\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe")
+    chrome_options.binary_location = '/usr/bin/google-chrome'
+    service = Service('/usr/bin/chromedriver')
+
     driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
 
