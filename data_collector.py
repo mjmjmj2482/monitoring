@@ -3,11 +3,13 @@ import pandas as pd
 from io import BytesIO
 from datetime import datetime
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+import chromedriver_autoinstaller
 
 def create_driver():
+    chromedriver_autoinstaller.install()
+
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
@@ -15,10 +17,7 @@ def create_driver():
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("--ignore-certificate-errors")
 
-    chrome_options.binary_location = '/usr/bin/google-chrome'
-    service = Service('/usr/bin/chromedriver')
-
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver = webdriver.Chrome(options=chrome_options)
     return driver
 
 def get_nxt_data():
@@ -78,29 +77,12 @@ def get_krx_data(input_date):
     if '단축코드' in df_krx.columns:
         df_krx = df_krx.rename(columns={'단축코드': '종목코드'})
 
-    cols_needed = ['종목코드', '시장구분', '종가', '거래량', '거래대금']
-    df_krx = df_krx[[c for c in cols_needed if c in df_krx.columns]]
-
-    df_krx = df_krx.rename(columns={
-        '종가': 'KRX 현재가',
-        '거래량': 'KRX 거래량',
-        '거래대금': 'KRX 거래대금'
-    })
-
-    return df_krx
+    df_krx = df_krx.rename(columns={'종가': 'KRX 현재가', '거래량': 'KRX 거래량', '거래대금': 'KRX 거래대금'})
+    return df_krx[['종목코드', '시장구분', 'KRX 현재가', 'KRX 거래량', 'KRX 거래대금']]
 
 def merge_data():
     today = datetime.today().strftime('%Y%m%d')
-    now_time = datetime.now().strftime('%Y.%m.%d, %H:%M분 기준')
-
     nxt_df = get_nxt_data()
     krx_df = get_krx_data(today)
-
     merged_df = pd.merge(nxt_df, krx_df, on="종목코드", how="inner")
-
-    merged_df["KRX 대비 NXT 거래량 비중"] = (merged_df["NXT 거래량"] / merged_df["KRX 거래량"]) * 100
-    merged_df["KRX 대비 NXT 거래량 비중"] = merged_df["KRX 대비 NXT 거래량 비중"].round(2)
-
-    merged_df["기준시간"] = now_time
-
     return merged_df, today
