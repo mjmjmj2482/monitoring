@@ -1,3 +1,5 @@
+import os
+import subprocess
 import requests
 import pandas as pd
 from io import BytesIO
@@ -8,14 +10,24 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 
+# 📌 Render에서는 Chrome을 직접 설치해야 함
+def install_chrome():
+    """Render 환경에서 Chrome을 설치하는 함수"""
+    if not os.path.exists("/usr/bin/google-chrome"):
+        subprocess.run("wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb", shell=True)
+        subprocess.run("sudo dpkg -i google-chrome-stable_current_amd64.deb", shell=True)
+        subprocess.run("sudo apt-get -f install -y", shell=True)
+
 def create_driver():
+    install_chrome()  # Chrome 설치
+
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # GUI 없이 실행
+    chrome_options.add_argument("--headless")  
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--remote-debugging-port=9222")
-    
+
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
