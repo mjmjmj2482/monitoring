@@ -3,6 +3,6 @@ pandas
 requests
 beautifulsoup4
 selenium
-chromedriver-autoinstaller
-openpyxl
+webdriver-manager
 xlsxwriter
+
