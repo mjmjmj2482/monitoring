@@ -31,48 +31,27 @@ ats_revenue_gain = round(krx_revenue_loss * 0.7)
 
 st.subheader("📋 요약 정보")
 
-summary_data_top = {
+summary_data = {
     "항목": [
         "기준시간", "NXT 거래량 총합", "KRX 거래량 총합",
-        "KRX 대비 NXT 거래량 비중", "전체시장 대비 NXT 거래량 비중"
-    ],
-    "값": [
-        merged_df['기준시간'].iloc[0], f'{total_nxt_volume:,.0f}', f'{total_krx_volume:,.0f}',
-        f'{krx_vs_nxt_ratio}%', f'{total_market_ratio}%'
-    ]
-}
-
-summary_data_bottom = {
-    "항목": [
+        "KRX 대비 NXT 거래량 비중", "전체시장 대비 NXT 거래량 비중",
         "NXT 총 거래대금", "KRX 수익 감소분", "ATS 수익 증가분"
     ],
     "값": [
+        merged_df['기준시간'].iloc[0], f'{total_nxt_volume:,.0f}', f'{total_krx_volume:,.0f}',
+        f'{krx_vs_nxt_ratio}%', f'{total_market_ratio}%',
         f'{total_nxt_trade:,.0f}', f'{krx_revenue_loss:,.0f}', f'{ats_revenue_gain:,.0f}'
     ]
 }
 
-col1, col2 = st.columns(2)
-
-with col1:
-    st.write("##### 📊 거래량 및 비중 요약")
-    st.table(pd.DataFrame(summary_data_top).style.set_properties(
-        **{'font-weight': 'bold'}, subset=pd.IndexSlice[:, ['항목']]))
-
-with col2:
-    st.write("##### 💰 거래대금 및 수익 요약")
-    st.table(pd.DataFrame(summary_data_bottom).style.set_properties(
-        **{'font-weight': 'bold'}, subset=pd.IndexSlice[:, ['항목']]))
+st.table(pd.DataFrame(summary_data))
 
 @st.cache_data
 def convert_df_to_excel(df):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df.to_excel(writer, index=False, sheet_name='데이터')
-        summary_df = pd.concat([
-            pd.DataFrame(summary_data_top),
-            pd.DataFrame(summary_data_bottom)
-        ], ignore_index=True)
-        summary_df.to_excel(writer, index=False, sheet_name='요약')
+        pd.DataFrame(summary_data).to_excel(writer, index=False, sheet_name='요약')
     return output.getvalue()
 
 st.download_button(
