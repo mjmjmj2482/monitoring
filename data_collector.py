@@ -3,21 +3,21 @@ import pandas as pd
 from io import BytesIO
 from datetime import datetime
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
-import chromedriver_autoinstaller
 
 def create_driver():
-    chromedriver_autoinstaller.install()
-
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless")  # GUI 없이 실행
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("--ignore-certificate-errors")
-
-    driver = webdriver.Chrome(options=chrome_options)
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--remote-debugging-port=9222")
+    
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
 
 def get_nxt_data():
@@ -71,8 +71,12 @@ def get_krx_data(input_date):
     otp = requests.post(gen_otp_url, data=gen_otp_data, headers=headers).text
     down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
     down_res = requests.post(down_url, data={'code': otp}, headers=headers)
-
-    df_krx = pd.read_csv(BytesIO(down_res.content), encoding='EUC-KR')
+    
+    try:
+        df_krx = pd.read_csv(BytesIO(down_res.content), encoding='utf-8')
+    except UnicodeDecodeError:
+        df_krx = pd.read_csv(BytesIO(down_res.content), encoding='EUC-KR')
+    
     df_krx['시장구분'] = df_krx['시장구분'].replace('KOSDAQ GLOBAL', 'KOSDAQ')
     if '단축코드' in df_krx.columns:
         df_krx = df_krx.rename(columns={'단축코드': '종목코드'})
